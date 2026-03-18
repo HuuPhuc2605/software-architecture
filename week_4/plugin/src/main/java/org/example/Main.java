@@ -3,16 +3,14 @@ package org.example;
 
 public class Main {
     public static void main(String[] args) {
+        PluginManager manager = new PluginManager();
 
-        Router router = new Router();
+        manager.register(new UserPlugin());
+        manager.register(new PostPlugin());
 
-        new UserPlugin().register(router);
-        new PostPlugin().register(router);
-        new CategoryPlugin().register(router);
-
-        router.handle("/user");
-        router.handle("/user/post");
-        router.handle("/user/category");
-
+        Router router = new Router(manager);
+        router.route("/user");
+        router.route("/post");
+        router.route("/category");
     }
 }

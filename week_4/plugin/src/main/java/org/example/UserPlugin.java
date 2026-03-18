@@ -1,13 +1,11 @@
 package org.example;
 
-public class UserPlugin {
-
-    public void register(Router router){
-
-        router.register("/user", () -> {
-            System.out.println("List users");
-        });
-
+public class UserPlugin implements Plugin {
+    @Override
+    public String handle(String path) {
+        if (path.equals("/user")) {
+            return "List User";
+        }
+        return null;
     }
-
 }

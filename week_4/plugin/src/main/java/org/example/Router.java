@@ -1,21 +1,14 @@
 package org.example;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class Router {
+    private PluginManager pluginManager;
 
-    private Map<String, Runnable> routes = new HashMap<>();
-
-    public void register(String path, Runnable action){
-        routes.put(path, action);
+    public Router(PluginManager pluginManager) {
+        this.pluginManager = pluginManager;
     }
 
-    public void handle(String path){
-        if(routes.containsKey(path)){
-            routes.get(path).run();
-        }else{
-            System.out.println("Route not found");
-        }
+    public void route(String path) {
+        String response = pluginManager.handleRequest(path);
+        System.out.println(response);
     }
 }
