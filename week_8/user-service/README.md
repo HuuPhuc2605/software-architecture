@@ -5,7 +5,7 @@ Service quản lý người dùng: đăng ký, đăng nhập và phát event khi
 
 ## Công nghệ
 - Java 17 + Spring Boot 3.x
-- Spring Security + JWT
+- Spring Security
 - Spring Data JPA
 - PostgreSQL / MySQL
 - Kafka / RabbitMQ (publish event)
@@ -14,7 +14,7 @@ Service quản lý người dùng: đăng ký, đăng nhập và phát event khi
 | Method | Endpoint    | Mô tả         |
 |--------|-------------|---------------|
 | POST   | /register   | Đăng ký       |
-| POST   | /login      | Đăng nhập     |
+| POST   | /login      | Đăng nhập (trả về `message` + `userId`)
 
 ## Request/Response mẫu
 
@@ -35,26 +35,26 @@ Response:
 ### POST /login
 Request:
 {
-"email": "a@example.com",
-"password": "123456"
+	"email": "a@example.com",
+	"password": "123456"
 }
 
 Response:
 {
-"token": "eyJhbGci...",
-"userId": "uuid-xxx"
+	"message": "Đăng nhập thành công",
+	"userId": "uuid-xxx"
 }
 
 ## Event Publishing
-Sau khi đăng ký thành công → publish event:
+Sau khi đăng ký thành công → publish event `USER_REGISTERED` với payload sau:
 
 Topic: USER_REGISTERED
 Payload:
 {
-"userId": "uuid-xxx",
-"username": "nguyen_van_a",
-"email": "a@example.com",
-"timestamp": "2024-01-01T10:00:00"
+	"userId": "uuid-xxx",
+	"username": "nguyen_van_a",
+	"email": "a@example.com",
+	"timestamp": "2024-01-01T10:00:00"
 }
 
 ## Cấu hình (application.yml)

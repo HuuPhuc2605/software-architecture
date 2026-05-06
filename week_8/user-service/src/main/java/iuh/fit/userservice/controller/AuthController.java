@@ -6,39 +6,52 @@ import iuh.fit.userservice.dto.RegisterRequest;
 import iuh.fit.userservice.event.EventPublisher;
 import iuh.fit.userservice.model.User;
 import iuh.fit.userservice.repository.UserRepository;
-import iuh.fit.userservice.security.JwtUtil;
+// JWT removed: simple login response used
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @RestController
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class AuthController {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
     private final EventPublisher eventPublisher;
 
-    public AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, EventPublisher eventPublisher) {
+    public AuthController(UserRepository userRepository, EventPublisher eventPublisher) {
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtUtil = jwtUtil;
         this.eventPublisher = eventPublisher;
+    }
+
+    @GetMapping("/")
+    public ResponseEntity<?> info() {
+        return ResponseEntity.ok(Map.of("message", "User Service: use POST /register and POST /login"));
+    }
+
+    @GetMapping("/register")
+    public ResponseEntity<?> registerInfo() {
+        return ResponseEntity.status(405).body(Map.of("message", "Use POST /register with username,email,password"));
+    }
+
+    @GetMapping("/login")
+    public ResponseEntity<?> loginInfo() {
+        return ResponseEntity.status(405).body(Map.of("message", "Use POST /login with email,password"));
     }
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest req) {
-        if (userRepository.findByEmail(req.getEmail()).isPresent()) {
+        String email = req.getEmail().trim().toLowerCase();
+        if (userRepository.findByEmail(email).isPresent()) {
             return ResponseEntity.badRequest().body(Map.of("message", "Email đã tồn tại"));
         }
 
         User user = new User();
         user.setUsername(req.getUsername());
-        user.setEmail(req.getEmail());
-        user.setPassword(passwordEncoder.encode(req.getPassword()));
+        user.setEmail(email);
+        // store plaintext password as requested
+        user.setPassword(req.getPassword());
         userRepository.save(user);
 
         Map<String, Object> payload = new HashMap<>();
@@ -53,14 +66,15 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest req) {
-        var opt = userRepository.findByEmail(req.getEmail());
+        String email = req.getEmail().trim().toLowerCase();
+        var opt = userRepository.findByEmail(email);
         if (opt.isEmpty()) return ResponseEntity.status(401).body(Map.of("message", "Invalid credentials"));
         User user = opt.get();
-        if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
+        String stored = user.getPassword();
+        if (stored == null || !stored.equals(req.getPassword())) {
             return ResponseEntity.status(401).body(Map.of("message", "Invalid credentials"));
         }
 
-        String token = jwtUtil.generateToken(user.getId().toString(), user.getUsername());
-        return ResponseEntity.ok(new AuthResponse(token, user.getId().toString()));
+        return ResponseEntity.ok(new AuthResponse("Đăng nhập thành công", user.getId().toString()));
     }
 }
